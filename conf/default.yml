@@ -1,0 +1,5 @@
+# this file can be overriden by user's settings
+
+jreName: jdk1.7.0_80
+javaVersion: 1.7
+srcEncoding: UTF-8

@@ -1,0 +1,8 @@
+allprojects {
+  apply from: "$rootDir/conf.gradle"
+  apply from: "$rootDir/common.gradle"
+
+  apply plugin: "com.github.sherter.google-java-format"
+
+  repositories { mavenCentral() }
+}

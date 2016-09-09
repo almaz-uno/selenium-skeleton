@@ -1,0 +1,74 @@
+apply plugin: 'maven'
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'eclipse-wtp'
+
+compileJava {
+	options.encoding = srcEncoding
+	sourceCompatibility = javaVersion
+	targetCompatibility = javaVersion
+}
+
+compileTestJava {
+	options.encoding = srcEncoding
+}
+
+tasks.withType(JavaCompile){
+	options.warnings = false
+}    
+
+task createSrcDirs << {
+	project.sourceSets.all { ss ->
+		ss.allSource.getSrcDirs().forEach { dir ->
+			dir.mkdirs()
+		}
+	}
+}
+
+task eclipsePrefs << {
+	def prefsFile = new File(projectDir, '.settings/org.eclipse.core.resources.prefs')
+	prefsFile.parentFile.mkdirs()
+	prefsFile.delete()
+	prefsFile << """eclipse.preferences.version=1   
+encoding/<project>=$srcEncoding
+"""
+}
+
+tasks['eclipse'].dependsOn eclipsePrefs
+
+eclipse {
+	classpath {
+		downloadSources = true
+		downloadJavadoc = true
+	}
+	
+	jdt {
+		sourceCompatibility = javaVersion
+		targetCompatibility = javaVersion
+		javaRuntimeName = jreName
+	}
+  
+	wtp {
+		facet {
+			// facet name: 'some-facet', version: 'facet-version'
+			file {
+				whenMerged { wtpFacet ->
+					wtpFacet.facets.each { facet ->
+						// force to the certain java version
+						if(facet.name == 'jst.java'){
+							facet.version = javaVersion
+						}
+					}
+				}
+			}
+		}
+	}
+	
+
+}
+
+configurations.all {
+	resolutionStrategy {
+		//failOnVersionConflict()
+	}
+}

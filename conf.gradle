@@ -1,0 +1,80 @@
+// read properties from YAML-file
+// -P switches will not work!
+// All settings will be aplied in this order:
+// default.yml
+// -Dconf= settings if specified or system env USER_CONF dev/<user-name>.yml or 
+// example: gradlew -Dconf=dev/ivanov.yaml
+
+buildscript {
+  apply plugin:'maven'
+
+  repositories { mavenCentral() }
+  dependencies { classpath 'org.yaml:snakeyaml:1.17' }
+}
+
+allprojects {
+
+  def userName = System.getenv('USER_CONF')
+  if(userName == null){
+    userName = System.getProperty('user.name')
+  }
+
+  def configList = [new File(rootProject.rootDir, 'conf/default.yml')]
+
+  def customConfig = System.getProperty('conf')
+
+  if(customConfig != null){
+    def f = new File(rootProject.rootDir, customConfig)
+    configList.add(f)
+  }else{
+    configList.add(new File(rootProject.rootDir, "conf/dev/${userName}.yml"))
+  }
+
+  configList.each{ confFile ->
+    try{
+      if(confFile.exists()){
+        loadConfig(project, confFile)
+      }else{
+        logger.error "File ${confFile.absolutePath} does not exist"
+        logger.info "File ${confFile.absolutePath} does not exist"
+      }
+    }catch(Exception e){
+      logger.error("Error while reading file $confFile", e)
+    }
+  }
+
+  logger.debug "All props for the project $name: "
+  ext.properties.each { key, val ->
+    logger.debug "\t$key=>'$val'"
+  }
+
+}
+
+Map merge(Map[] sources) {
+  if (sources.length == 0) return [:]
+  if (sources.length == 1) return sources[0]
+
+  sources.inject([:]) { result, source ->
+    source.each { k, v ->
+      result[k] = result[k] instanceof Map ? merge(result[k], v) : v
+    }
+    result
+  }
+}
+
+def loadConfig(theProject, confFile){
+  org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml()
+  Map<String, Object> conf = yaml.load(confFile.getText('UTF-8'))
+
+  conf.each{ key, val ->
+    if(theProject.ext.has(key)){
+      if(theProject.ext.get(key) instanceof Map){
+        theProject.ext.set(key, merge(theProject.ext.get(key), val))
+        return
+      }
+    }
+    theProject.ext.set(key, val)
+
+  }
+
+}

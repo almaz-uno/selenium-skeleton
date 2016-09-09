@@ -1,1 +1,6 @@
-"# selenium-skeleton" 
+# selenium-skeleton
+
+Демонстрационный и стартовый проект для использования Selenium.
+
+## Установка
+
