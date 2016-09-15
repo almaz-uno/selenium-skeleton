@@ -2,6 +2,6 @@ plugins {
   id "com.github.sherter.google-java-format" version "0.3.2" apply false
 }
 
-apply from: 'include.gradle'
+apply from: 'gradle/include.gradle'
 
 description = 'Selenium project'
